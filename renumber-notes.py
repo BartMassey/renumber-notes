@@ -5,20 +5,15 @@
 import argparse, os, re, sys
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-g", "--git-mv", help="use `git move`", action="store_true")
-ap.add_argument("--no-git-mv", help="do not use `git move`", action="store_true")
+ap.add_argument("-m", "--no-git-mv", help="use non-git `mv`", action="store_true")
 ap.add_argument("--preview", help="just show moves", action="store_true")
 ap.add_argument("-d", "--digits", help="number of digits in file prefix", type=int)
 ap.add_argument("offset", help="[+<OFFSET>|-<OFFSET>] (default +1)", nargs="?")
 ap.add_argument("start", help="first target file number (default 1)", nargs="?")
 args = ap.parse_args()
 
-git_mv = args.git_mv
-if not args.git_mv and os.path.isdir(".git"):
-    git_mv = True
-if args.no_git_mv:
-    git_mv = False
-    
+git_mv = not args.no_git_mv
+
 off = args.offset
 if off and not re.match("^[+-][0-9]+$", off):
     if args.start:

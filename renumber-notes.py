@@ -39,12 +39,47 @@ except:
 
 files = set(os.listdir())
 
+# Detect common invariant prefix across files
+# Example: "02-1-intro.md", "02-2-basics.md" -> prefix is "02-"
+def find_common_prefix(filenames):
+    """Find longest common prefix that ends with a non-digit followed by digit"""
+    if not filenames:
+        return ""
+
+    # Try different prefix lengths
+    candidates = []
+    for f in filenames:
+        # Find all positions where we have pattern ending in non-digit + digit
+        for i in range(len(f)):
+            if i > 0 and not f[i-1].isdigit() and f[i:].lstrip() and f[i].isdigit():
+                candidates.append(f[:i])
+
+    if not candidates:
+        return ""
+
+    # Find the longest prefix that is common to all files
+    for prefix_len in range(max(len(c) for c in candidates), 0, -1):
+        for candidate in candidates:
+            if len(candidate) >= prefix_len:
+                prefix = candidate[:prefix_len]
+                # Check if this prefix is common to all files
+                if all(f.startswith(prefix) for f in filenames):
+                    # Verify that after removing prefix, files still match \d+-
+                    if all(re.match(r"^(\d+)-", f[len(prefix):]) for f in filenames if f.startswith(prefix)):
+                        return prefix
+    return ""
+
+numbered_files = [f for f in files if re.match(r"^(\d+)-", f) or re.search(r"-(\d+)-", f)]
+prefix = find_common_prefix(numbered_files) if numbered_files else ""
+
 # Find all numbered files to determine appropriate digit width
 max_num = 0
 min_num = None
 input_digits = {}  # Map from file number to its digit width
 for f in files:
-    match = re.match(r"^(\d+)-", f)
+    # Remove prefix before matching
+    fname = f[len(prefix):] if f.startswith(prefix) else f
+    match = re.match(r"^(\d+)-", fname)
     if match:
         digit_str = match.group(1)
         num = int(digit_str)
@@ -83,15 +118,19 @@ while True:
     # Try to find file with any digit width
     for f in files:
         if i in input_digits:
+            # Remove prefix before matching
+            fname = f[len(prefix):] if f.startswith(prefix) else f
             # Match file with the specific digit width it uses
-            if re.match(f"{i:0{input_digits[i]}}-", f):
+            if re.match(f"^{i:0{input_digits[i]}}-", fname):
                 target = f
                 break
     if target is None:
         break
-    # Replace with output digit width
-    old_pattern = f"{i:0{input_digits[i]}}-"
-    new_name = re.sub(old_pattern, f"{i+dirn:0{ndigits}}-", target)
+    # Replace with output digit width (keeping the prefix)
+    fname = target[len(prefix):] if target.startswith(prefix) else target
+    old_pattern = f"^{i:0{input_digits[i]}}-"
+    new_fname = re.sub(old_pattern, f"{i+dirn:0{ndigits}}-", fname)
+    new_name = prefix + new_fname
     if git_mv:
         if args.preview:
             print(f"git mv {target} {new_name}")

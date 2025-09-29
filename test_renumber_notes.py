@@ -168,6 +168,30 @@ class TestRenumberNotes(unittest.TestCase):
         self.assertIn("mv 01-intro.md", result.stdout)
         self.assertNotIn("git mv", result.stdout)
 
+    def test_invariant_prefix(self):
+        """Test files with invariant numeric prefix"""
+        self.create_files(["02-1-intro.md", "02-2-basics.md", "02-3-advanced.md"])
+        result = self.run_script("--no-git-mv", "+1")
+        self.assertEqual(result.returncode, 0)
+        files = self.get_files()
+        self.assertEqual(files, ["02-2-intro.md", "02-3-basics.md", "02-4-advanced.md"])
+
+    def test_invariant_prefix_decrement(self):
+        """Test decrement with invariant numeric prefix"""
+        self.create_files(["week2-05-intro.md", "week2-06-basics.md", "week2-07-advanced.md"])
+        result = self.run_script("--no-git-mv", "-2")
+        self.assertEqual(result.returncode, 0)
+        files = self.get_files()
+        self.assertEqual(files, ["week2-03-intro.md", "week2-04-basics.md", "week2-05-advanced.md"])
+
+    def test_invariant_prefix_with_gaps(self):
+        """Test prefix detection with gaps in numbering"""
+        self.create_files(["lec-01-intro.md", "lec-02-basics.md", "lec-05-advanced.md"])
+        result = self.run_script("--no-git-mv", "+1")
+        self.assertEqual(result.returncode, 0)
+        files = self.get_files()
+        self.assertEqual(files, ["lec-02-intro.md", "lec-03-basics.md", "lec-05-advanced.md"])
+
 
 if __name__ == "__main__":
     unittest.main()

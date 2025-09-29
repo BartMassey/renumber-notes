@@ -48,34 +48,42 @@ if args.start:
 
 files = set(os.listdir())
 
-# Determine number of digits if not specified
+# Find all numbered files to determine appropriate digit width
+max_num = 0
+input_digits = {}  # Map from file number to its digit width
+for f in files:
+    match = re.match(r"^(\d+)-", f)
+    if match:
+        digit_str = match.group(1)
+        num = int(digit_str)
+        max_num = max(max_num, num)
+        input_digits[num] = len(digit_str)
+
+# Determine output digit width
 if args.digits:
     ndigits = args.digits
+elif input_digits:
+    # Use the maximum digit width found, expanded if necessary for offset
+    max_after_offset = max_num + abs(dirn)
+    ndigits = max(max(input_digits.values()), len(str(max_after_offset)))
 else:
-    # Find all numbered files to determine appropriate digit width
-    max_num = 0
-    for f in files:
-        match = re.match(r"^(\d+)-", f)
-        if match:
-            num = int(match.group(1))
-            max_num = max(max_num, num)
-    # Determine digits needed for max number after offset
-    if max_num > 0:
-        max_after_offset = max_num + abs(dirn)
-        ndigits = len(str(max_after_offset))
-    else:
-        ndigits = 2  # default to 2 digits if no numbered files found
+    ndigits = 2  # default to 2 digits if no numbered files found
 
 i = start
 while True:
     target = None
+    # Try to find file with any digit width
     for f in files:
-        if re.match(f"{i:0{ndigits}}-", f):
-            target = f
-            break
+        if i in input_digits:
+            # Match file with the specific digit width it uses
+            if re.match(f"{i:0{input_digits[i]}}-", f):
+                target = f
+                break
     if target is None:
         break
-    new_name = re.sub(f"{i:0{ndigits}}-", f"{i+dirn:0{ndigits}}-", target)
+    # Replace with output digit width
+    old_pattern = f"{i:0{input_digits[i]}}-"
+    new_name = re.sub(old_pattern, f"{i+dirn:0{ndigits}}-", target)
     if git_mv:
         if args.preview:
             print(f"git mv {target} {new_name}")

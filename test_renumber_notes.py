@@ -192,6 +192,31 @@ class TestRenumberNotes(unittest.TestCase):
         files = self.get_files()
         self.assertEqual(files, ["lec-02-intro.md", "lec-03-basics.md", "lec-05-advanced.md"])
 
+    def test_preserve_leading_zeros(self):
+        """Test that leading zeros are preserved"""
+        self.create_files(["001-intro.md", "002-basics.md", "003-advanced.md"])
+        result = self.run_script("--no-git-mv", "+7")
+        self.assertEqual(result.returncode, 0)
+        files = self.get_files()
+        self.assertEqual(files, ["008-intro.md", "009-basics.md", "010-advanced.md"])
+
+    def test_expand_digits_when_needed(self):
+        """Test that digit width expands when result exceeds current width"""
+        self.create_files(["08-intro.md", "09-basics.md"])
+        result = self.run_script("--no-git-mv", "+1")
+        self.assertEqual(result.returncode, 0)
+        files = self.get_files()
+        # Should expand to 2 digits for 10
+        self.assertEqual(files, ["09-intro.md", "10-basics.md"])
+
+    def test_preserve_leading_zeros_with_prefix(self):
+        """Test leading zeros preserved with invariant prefix"""
+        self.create_files(["week2-001-intro.md", "week2-002-basics.md", "week2-003-advanced.md"])
+        result = self.run_script("--no-git-mv", "+10")
+        self.assertEqual(result.returncode, 0)
+        files = self.get_files()
+        self.assertEqual(files, ["week2-011-intro.md", "week2-012-basics.md", "week2-013-advanced.md"])
+
 
 if __name__ == "__main__":
     unittest.main()

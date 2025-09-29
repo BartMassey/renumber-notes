@@ -29,7 +29,7 @@ if off and not re.match("^[+-][0-9]+$", off):
 if not off:
     print("offset must be nonempty", file=sys.stderr)
     exit(1)
-if off[1] == "+":
+if off[0] == "+":
     off = off[1:]
 try:
     dirn = int(off)

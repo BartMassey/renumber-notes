@@ -42,7 +42,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_basic_increment_two_digits(self):
         """Test basic increment with 2-digit prefixes"""
         self.create_files(["01-intro.md", "02-basics.md", "03-advanced.md"])
-        result = self.run_script("--no-git-mv")
+        result = self.run_script("--no-git-mv", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["02-intro.md", "03-basics.md", "04-advanced.md"])
@@ -50,7 +50,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_basic_increment_one_digit(self):
         """Test basic increment with 1-digit prefixes"""
         self.create_files(["1-intro.md", "2-basics.md", "3-advanced.md"])
-        result = self.run_script("--no-git-mv")
+        result = self.run_script("--no-git-mv", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["2-intro.md", "3-basics.md", "4-advanced.md"])
@@ -58,7 +58,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_basic_increment_three_digits(self):
         """Test basic increment with 3-digit prefixes"""
         self.create_files(["001-intro.md", "002-basics.md", "003-advanced.md"])
-        result = self.run_script("--no-git-mv")
+        result = self.run_script("--no-git-mv", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["002-intro.md", "003-basics.md", "004-advanced.md"])
@@ -90,15 +90,15 @@ class TestRenumberNotes(unittest.TestCase):
     def test_manual_digits_override(self):
         """Test --digits flag to override digit count"""
         self.create_files(["1-intro.md", "2-basics.md"])
-        result = self.run_script("--no-git-mv", "--digits", "3")
+        result = self.run_script("--no-git-mv", "--digits", "3", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
-        self.assertEqual(files, ["002-basics.md", "002-intro.md"])
+        self.assertEqual(files, ["002-intro.md", "003-basics.md"])
 
     def test_preview_mode(self):
         """Test preview mode doesn't modify files"""
         self.create_files(["01-intro.md", "02-basics.md"])
-        result = self.run_script("--no-git-mv", "--preview")
+        result = self.run_script("--no-git-mv", "--preview", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["01-intro.md", "02-basics.md"])
@@ -108,7 +108,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_gap_in_numbers(self):
         """Test files with gaps in numbering"""
         self.create_files(["01-intro.md", "02-basics.md", "05-advanced.md"])
-        result = self.run_script("--no-git-mv")
+        result = self.run_script("--no-git-mv", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["02-intro.md", "03-basics.md", "05-advanced.md"])
@@ -116,7 +116,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_mixed_extensions(self):
         """Test files with different extensions"""
         self.create_files(["01-intro.md", "02-basics.txt", "03-advanced.pdf"])
-        result = self.run_script("--no-git-mv")
+        result = self.run_script("--no-git-mv", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["02-intro.md", "03-basics.txt", "04-advanced.pdf"])
@@ -124,7 +124,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_no_numbered_files(self):
         """Test with no numbered files"""
         self.create_files(["readme.md", "notes.txt"])
-        result = self.run_script("--no-git-mv")
+        result = self.run_script("--no-git-mv", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["notes.txt", "readme.md"])
@@ -132,7 +132,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_non_numbered_files_ignored(self):
         """Test that non-numbered files are not affected"""
         self.create_files(["01-intro.md", "readme.md", "02-basics.md"])
-        result = self.run_script("--no-git-mv")
+        result = self.run_script("--no-git-mv", "+1")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["02-intro.md", "03-basics.md", "readme.md"])
@@ -154,7 +154,7 @@ class TestRenumberNotes(unittest.TestCase):
         subprocess.run(["git", "add", "."], capture_output=True)
         subprocess.run(["git", "commit", "-m", "initial"], capture_output=True)
 
-        result = self.run_script("--preview")
+        result = self.run_script("--preview", "+1")
         self.assertEqual(result.returncode, 0)
         self.assertIn("git mv", result.stdout)
 
@@ -163,7 +163,7 @@ class TestRenumberNotes(unittest.TestCase):
         subprocess.run(["git", "init"], capture_output=True)
         self.create_files(["01-intro.md", "02-basics.md"])
 
-        result = self.run_script("--no-git-mv", "--preview")
+        result = self.run_script("--no-git-mv", "--preview", "+1")
         self.assertEqual(result.returncode, 0)
         self.assertIn("mv 01-intro.md", result.stdout)
         self.assertNotIn("git mv", result.stdout)

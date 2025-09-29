@@ -37,19 +37,11 @@ except:
     print("offset must be an integer", file=sys.stderr)
     exit(1)
 
-start = 1
-if args.start:
-    try:
-        start = int(args.start)
-        assert start >= 0
-    except:
-        print("start must be a non-negative integer", file=sys.stderr)
-        exit(1)
-
 files = set(os.listdir())
 
 # Find all numbered files to determine appropriate digit width
 max_num = 0
+min_num = None
 input_digits = {}  # Map from file number to its digit width
 for f in files:
     match = re.match(r"^(\d+)-", f)
@@ -57,7 +49,23 @@ for f in files:
         digit_str = match.group(1)
         num = int(digit_str)
         max_num = max(max_num, num)
+        if min_num is None or num < min_num:
+            min_num = num
         input_digits[num] = len(digit_str)
+
+# Determine start number
+if args.start:
+    try:
+        start = int(args.start)
+        assert start >= 0
+    except:
+        print("start must be a non-negative integer", file=sys.stderr)
+        exit(1)
+elif min_num is not None:
+    # Infer start from lowest-numbered file
+    start = min_num
+else:
+    start = 1
 
 # Determine output digit width
 if args.digits:

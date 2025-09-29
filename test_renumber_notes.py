@@ -66,7 +66,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_decrement(self):
         """Test decrementing file numbers"""
         self.create_files(["05-intro.md", "06-basics.md", "07-advanced.md"])
-        result = self.run_script("--no-git-mv", "-2", "5")
+        result = self.run_script("--no-git-mv", "-2")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["03-intro.md", "04-basics.md", "05-advanced.md"])
@@ -140,7 +140,7 @@ class TestRenumberNotes(unittest.TestCase):
     def test_auto_expand_digits(self):
         """Test automatic digit expansion when needed"""
         self.create_files(["8-intro.md", "9-basics.md"])
-        result = self.run_script("--no-git-mv", "+5", "8")
+        result = self.run_script("--no-git-mv", "+5")
         self.assertEqual(result.returncode, 0)
         files = self.get_files()
         self.assertEqual(files, ["13-intro.md", "14-basics.md"])

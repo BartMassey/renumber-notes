@@ -8,6 +8,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-g", "--git-mv", help="use `git move`", action="store_true")
 ap.add_argument("--no-git-mv", help="do not use `git move`", action="store_true")
 ap.add_argument("--preview", help="just show moves", action="store_true")
+ap.add_argument("-d", "--digits", help="number of digits in file prefix", type=int)
 ap.add_argument("offset", help="[+<OFFSET>|-<OFFSET>] (default +1)", nargs="?")
 ap.add_argument("start", help="first target file number (default 1)", nargs="?")
 args = ap.parse_args()
@@ -46,16 +47,35 @@ if args.start:
         exit(1)
 
 files = set(os.listdir())
+
+# Determine number of digits if not specified
+if args.digits:
+    ndigits = args.digits
+else:
+    # Find all numbered files to determine appropriate digit width
+    max_num = 0
+    for f in files:
+        match = re.match(r"^(\d+)-", f)
+        if match:
+            num = int(match.group(1))
+            max_num = max(max_num, num)
+    # Determine digits needed for max number after offset
+    if max_num > 0:
+        max_after_offset = max_num + abs(dirn)
+        ndigits = len(str(max_after_offset))
+    else:
+        ndigits = 2  # default to 2 digits if no numbered files found
+
 i = start
 while True:
     target = None
     for f in files:
-        if re.match(f"{i:02}-", f):
+        if re.match(f"{i:0{ndigits}}-", f):
             target = f
             break
     if target is None:
         break
-    new_name = re.sub(f"{i:02}-", f"{i+dirn:02}-", target)
+    new_name = re.sub(f"{i:0{ndigits}}-", f"{i+dirn:0{ndigits}}-", target)
     if git_mv:
         if args.preview:
             print(f"git mv {target} {new_name}")

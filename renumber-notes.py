@@ -2,7 +2,7 @@
 # Renumber lecture notes pages.
 # Bart Massey 2021
 
-import argparse, os, re, sys
+import argparse, os, re, subprocess, sys
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--no-git-mv", help="use non-git `mv`", action="store_true")
@@ -12,7 +12,21 @@ ap.add_argument("offset", help="[+<OFFSET>|-<OFFSET>] (default +1)", nargs="?")
 ap.add_argument("start", help="first target file number (default 1)", nargs="?")
 args = ap.parse_args()
 
-git_mv = not args.no_git_mv
+# Check if files are under git control
+def files_under_git():
+    """Check if current directory is under git control"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
+
+git_mv = files_under_git() and not args.no_git_mv
 
 off = args.offset
 if off and not re.match("^[+-][0-9]+$", off):

@@ -123,31 +123,28 @@ else:
 
 i = start
 while True:
-    target = None
-    # Try to find file with any digit width
-    for f in files:
-        if i in input_digits:
-            # Remove prefix before matching
-            fname = f[len(prefix):] if f.startswith(prefix) else f
-            # Match file with the specific digit width it uses
-            if re.match(f"^{i:0{input_digits[i]}}-", fname):
-                target = f
-                break
-    if target is None:
+    if i not in input_digits:
         break
-    # Replace with output digit width (keeping the prefix)
-    fname = target[len(prefix):] if target.startswith(prefix) else target
     old_pattern = f"^{i:0{input_digits[i]}}-"
-    new_fname = re.sub(old_pattern, f"{i+dirn:0{ndigits}}-", fname)
-    new_name = prefix + new_fname
-    if git_mv:
-        if args.preview:
-            print(f"git mv {target} {new_name}")
+    new_prefix = f"{i+dirn:0{ndigits}}-"
+    targets = []
+    for f in files:
+        fname = f[len(prefix):] if f.startswith(prefix) else f
+        if re.match(old_pattern, fname):
+            targets.append(f)
+    if not targets:
+        break
+    for target in targets:
+        fname = target[len(prefix):] if target.startswith(prefix) else target
+        new_name = prefix + re.sub(old_pattern, new_prefix, fname)
+        if git_mv:
+            if args.preview:
+                print(f"git mv {target} {new_name}")
+            else:
+                assert os.system(f"git mv {target} {new_name}") == 0
         else:
-            assert os.system(f"git mv {target} {new_name}") == 0
-    else:
-        if args.preview:
-            print(f"mv {target} {new_name}")
-        else:
-            os.rename(target, new_name)
+            if args.preview:
+                print(f"mv {target} {new_name}")
+            else:
+                os.rename(target, new_name)
     i += 1
